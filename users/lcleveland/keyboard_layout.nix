@@ -6,5 +6,9 @@
       kb_layout = "us";
       kb_variant = "colemak_dh";
     };
+    eiros.users.mangowc.settings = {
+      xkb_rules_layout = "us";
+      xkb_rules_variant = "colemak_dh";
+    };
   };
 }
