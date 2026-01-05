@@ -151,6 +151,109 @@ in
           mangowc_command = "spawn_shell";
           command_arguments = "dms ipc call night toggle";
         };
+        view_tag_1 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "1";
+          mangowc_command = "view";
+          command_arguments = "1";
+        };
+        view_tag_2 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "2";
+          mangowc_command = "view";
+          command_arguments = "2";
+        };
+        view_tag_3 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "3";
+          mangowc_command = "view";
+          command_arguments = "3";
+        };
+        view_tag_4 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "4";
+          mangowc_command = "view";
+          command_arguments = "4";
+        };
+        view_tag_5 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "5";
+          mangowc_command = "view";
+          command_arguments = "5";
+        };
+        view_tag_6 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "6";
+          mangowc_command = "view";
+          command_arguments = "6";
+        };
+        view_tag_7 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "7";
+          mangowc_command = "view";
+          command_arguments = "7";
+        };
+        view_tag_8 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "8";
+          mangowc_command = "view";
+          command_arguments = "8";
+        };
+        view_tag_9 = {
+          modifier_keys = [ "SUPER" ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "9";
+          mangowc_command = "view";
+          command_arguments = "9";
+        };
+        move_window_monitor_left = {
+          modifier_keys = [
+            "SUPER"
+            "SHIFT"
+          ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "h";
+          mangowc_command = "tagmon";
+          command_arguments = "left,1";
+        };
+        move_window_monitor_right = {
+          modifier_keys = [
+            "SUPER"
+            "SHIFT"
+          ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "l";
+          mangowc_command = "tagmon";
+          command_arguments = "right,1";
+        };
+        move_window_monitor_up = {
+          modifier_keys = [
+            "SUPER"
+            "SHIFT"
+          ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "k";
+          mangowc_command = "tagmon";
+          command_arguments = "up,1";
+        };
+        move_window_monitor_down = {
+          modifier_keys = [
+            "SUPER"
+            "SHIFT"
+          ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "j";
+          mangowc_command = "tagmon";
+          command_arguments = "down,1";
+        };
       };
     };
   };
