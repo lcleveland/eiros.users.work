@@ -32,6 +32,8 @@ let
     "ttf-dejavu"
   ];
   ncplayerDepsArgs = lib.concatStringsSep " " ncplayerDeps;
+
+  desktopFileName = "${cfg.desktop_entry_name}.desktop";
 in
 {
   options.eiros.system.ninjarmm = {
@@ -62,7 +64,7 @@ in
     desktop_entry_name = lib.mkOption {
       default = "ninjarmm-ncplayer-distrobox";
       type = lib.types.str;
-      description = "Name of the desktop entry (without .desktop) used as the ninjarmm:// handler.";
+      description = "Desktop entry basename (without .desktop) used as the ninjarmm:// handler.";
     };
   };
 
@@ -94,24 +96,22 @@ in
       '')
     ];
 
-    # Desktop entry for the protocol handler (declarative)
-    xdg.desktopEntries."${cfg.desktop_entry_name}" = {
-      name = "NinjaOne Remote (Distrobox)";
-      genericName = "Remote Access";
-      comment = "Launch Ninja ncplayer inside the distrobox container";
-      exec = "ninjarmm-handler %U";
-      terminal = false;
-      type = "Application";
-      mimeType = [ "x-scheme-handler/ninjarmm" ];
-      categories = [
-        "Network"
-        "RemoteAccess"
-      ];
-    };
+    # Install a system-wide desktop file in /etc/xdg/applications/
+    environment.etc."xdg/applications/${desktopFileName}".text = ''
+      [Desktop Entry]
+      Type=Application
+      Name=NinjaOne Remote (Distrobox)
+      GenericName=Remote Access
+      Comment=Launch Ninja ncplayer inside the distrobox container
+      Exec=ninjarmm-handler %U
+      Terminal=false
+      Categories=Network;RemoteAccess;
+      MimeType=x-scheme-handler/ninjarmm;
+    '';
 
-    # Make ninjarmm:// open our handler desktop entry
+    # Make ninjarmm:// open our handler
     xdg.mime.defaultApplications = {
-      "x-scheme-handler/ninjarmm" = [ "${cfg.desktop_entry_name}.desktop" ];
+      "x-scheme-handler/ninjarmm" = [ desktopFileName ];
     };
 
     # Ensure the container exists + is bootstrapped (user service, non-interactive)
