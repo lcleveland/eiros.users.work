@@ -5,13 +5,10 @@
   ...
 }:
 let
-  cfg = config.eiros.system.virtualization.distrobox.ninjarmm;
+  cfg = config.eiros.system.ninjarmm;
 
-  virt_enabled =
-    (config.eiros.system.virtualization.enable or false)
-    && (config.eiros.system.virtualization.podman.enable or false);
-
-  arch_deps = [
+  # Arch packages required for Ninja ncplayer runtime inside the container
+  ncplayerDeps = [
     "libx11"
     "libxcb"
     "libxext"
@@ -34,92 +31,166 @@ let
     "freetype2"
     "ttf-dejavu"
   ];
-
-  arch_deps_str = lib.concatStringsSep " " arch_deps;
+  ncplayerDepsArgs = lib.concatStringsSep " " ncplayerDeps;
 in
 {
-  options.eiros.system.virtualization.distrobox.ninjarmm = {
+  options.eiros.system.ninjarmm = {
     enable = lib.mkOption {
-      type = lib.types.bool;
       default = true;
-      description = "Enable NinjaRMM ncplayer support via a distrobox container.";
+      type = lib.types.bool;
+      description = "Enable NinjaOne ncplayer integration via distrobox + ninjarmm:// handler.";
     };
 
     container_name = lib.mkOption {
+      default = "arch";
       type = lib.types.str;
-      default = "ncplayer";
-      description = "Name of the distrobox container hosting Ninja ncplayer.";
+      description = "Distrobox container name that contains /opt/ncplayer.";
     };
 
     image = lib.mkOption {
-      type = lib.types.str;
       default = "archlinux:latest";
-      description = "OCI image used when creating the distrobox container.";
+      type = lib.types.str;
+      description = "Container image used to create the distrobox.";
     };
 
     install_ncplayer = lib.mkOption {
-      type = lib.types.bool;
       default = true;
-      description = "Install ninjarmm-ncplayer inside the container via paru.";
+      type = lib.types.bool;
+      description = "Install ninjarmm-ncplayer inside the distrobox container via paru.";
+    };
+
+    desktop_entry_name = lib.mkOption {
+      default = "ninjarmm-ncplayer-distrobox";
+      type = lib.types.str;
+      description = "Name of the desktop entry (without .desktop) used as the ninjarmm:// handler.";
     };
   };
 
-  config = lib.mkIf (cfg.enable && virt_enabled) {
-    # Optional but helpful: fail fast if parents are "enabled" but distrobox isn't actually present.
-    assertions = [
-      {
-        assertion = pkgs ? distrobox;
-        message = "ninjarmm distrobox support requires pkgs.distrobox to be available (handled by parent modules).";
-      }
+  config = lib.mkIf cfg.enable {
+    # Host requirements for distrobox
+    virtualisation.podman.enable = true;
+
+    environment.systemPackages = [
+      pkgs.distrobox
+      pkgs.podman
+
+      # Protocol handler installed on the host (declarative)
+      (pkgs.writeShellScriptBin "ninjarmm-handler" ''
+        set -euo pipefail
+
+        # Prevent NixOS linker env from poisoning container runtime
+        unset LD_LIBRARY_PATH LD_PRELOAD NIX_LD NIX_LD_LIBRARY_PATH
+
+        # Force X11 backend (ncplayer only has Qt "xcb" plugin in container)
+        export QT_QPA_PLATFORM=xcb
+        export GDK_BACKEND=x11
+
+        # Ensure distrobox/podman/coreutils are discoverable when launched from desktop
+        export PATH="/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin"
+
+        exec ${pkgs.distrobox}/bin/distrobox-enter \
+          -n ${lib.escapeShellArg cfg.container_name} \
+          -- /opt/ncplayer/bin/ncplayer -u "$@"
+      '')
     ];
 
-    systemd.user.services."distrobox-${cfg.container_name}-ninjarmm-ensure" = {
-      description = "Ensure NinjaRMM distrobox exists and is bootstrapped";
+    # Desktop entry for the protocol handler (declarative)
+    xdg.desktopEntries."${cfg.desktop_entry_name}" = {
+      name = "NinjaOne Remote (Distrobox)";
+      genericName = "Remote Access";
+      comment = "Launch Ninja ncplayer inside the distrobox container";
+      exec = "ninjarmm-handler %U";
+      terminal = false;
+      type = "Application";
+      mimeType = [ "x-scheme-handler/ninjarmm" ];
+      categories = [
+        "Network"
+        "RemoteAccess"
+      ];
+    };
+
+    # Make ninjarmm:// open our handler desktop entry
+    xdg.mime.defaultApplications = {
+      "x-scheme-handler/ninjarmm" = [ "${cfg.desktop_entry_name}.desktop" ];
+    };
+
+    # Ensure the container exists + is bootstrapped (user service, non-interactive)
+    systemd.user.services."distrobox-${cfg.container_name}-ensure" = {
+      description = "Ensure distrobox ${cfg.container_name} exists and is bootstrapped for Ninja ncplayer";
       wantedBy = [ "default.target" ];
       after = [ "graphical-session.target" ];
 
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
+
+        # Restart portal so scheme handler changes are picked up automatically
+        ExecStartPost = "${pkgs.systemd}/bin/systemctl --user try-restart xdg-desktop-portal.service";
+
         Environment = [
-          # Give scripts a sane PATH for basic shell tooling inside the service
-          "PATH=/run/current-system/sw/bin:/usr/bin:/bin"
+          "PATH=/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin"
         ];
       };
 
       script = ''
         set -euo pipefail
 
-        name="${cfg.container_name}"
-        image="${cfg.image}"
+        name=${lib.escapeShellArg cfg.container_name}
+        image=${lib.escapeShellArg cfg.image}
 
         # Create container if missing
         if ! ${pkgs.distrobox}/bin/distrobox-list --no-color | awk '{print $1}' | grep -qx "$name"; then
-          ${pkgs.distrobox}/bin/distrobox-create \
-            --yes \
-            --name "$name" \
-            --image "$image"
+          ${pkgs.distrobox}/bin/distrobox-create --yes --name "$name" --image "$image"
         fi
 
-        # Bootstrap paru + install runtime deps
+        # 1) Install build prerequisites as ROOT (no sudo/tty)
+        ${pkgs.distrobox}/bin/distrobox-enter -n "$name" --root -- bash -lc '
+          set -euo pipefail
+          pacman -Syu --noconfirm --needed base-devel git
+        '
+
+        # 2) Build paru as USER (no sudo), only if missing
         ${pkgs.distrobox}/bin/distrobox-enter -n "$name" -- bash -lc '
           set -euo pipefail
-
-          if ! command -v paru >/dev/null 2>&1; then
-            sudo pacman -Syu --noconfirm --needed base-devel git
-            tmpdir="$(mktemp -d)"
-            cd "$tmpdir"
-            git clone https://aur.archlinux.org/paru.git
-            cd paru
-            makepkg -si --noconfirm
+          if command -v paru >/dev/null 2>&1; then
+            exit 0
           fi
 
-          sudo paru -Syu --noconfirm --needed ${arch_deps_str}
-
-          ${lib.optionalString cfg.install_ncplayer ''
-            sudo paru -S --noconfirm --needed ninjarmm-ncplayer
-          ''}
+          work="$(mktemp -d)"
+          cd "$work"
+          git clone https://aur.archlinux.org/paru.git
+          cd paru
+          makepkg -sf --noconfirm
+          echo "$work/paru" > /tmp/paru-build-dir.txt
         '
+
+        # 3) Install the built paru package as ROOT
+        ${pkgs.distrobox}/bin/distrobox-enter -n "$name" --root -- bash -lc '
+          set -euo pipefail
+          build_dir="$(cat /tmp/paru-build-dir.txt)"
+          pkg="$(ls -1 "$build_dir"/paru-*.pkg.tar.* | head -n 1)"
+          pacman -U --noconfirm "$pkg"
+        '
+
+        # 4) Install ncplayer runtime deps
+        ${pkgs.distrobox}/bin/distrobox-enter -n "$name" --root -- bash -lc '
+          set -euo pipefail
+          export PARU_EDITOR=/bin/true
+          export EDITOR=/bin/true
+          export PAGER=cat
+          paru -Syu --noconfirm --needed ${ncplayerDepsArgs}
+        '
+
+        # 5) Optionally install ninjarmm-ncplayer itself
+        ${lib.optionalString cfg.install_ncplayer ''
+          ${pkgs.distrobox}/bin/distrobox-enter -n "$name" --root -- bash -lc '
+            set -euo pipefail
+            export PARU_EDITOR=/bin/true
+            export EDITOR=/bin/true
+            export PAGER=cat
+            paru -S --noconfirm --needed ninjarmm-ncplayer
+          '
+        ''}
       '';
     };
   };
