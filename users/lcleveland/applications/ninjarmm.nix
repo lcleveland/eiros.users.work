@@ -111,7 +111,7 @@ in
 
     # Make ninjarmm:// open our handler
     xdg.mime.defaultApplications = {
-      "x-scheme-handler/ninjarmm" = [ desktopFileName ];
+      "x-scheme-handler/ninjarmm" = lib.mkForce [ desktopFileName ];
     };
 
     # Ensure the container exists + is bootstrapped (user service, non-interactive)
