@@ -216,7 +216,7 @@ in
         };
         move_window_monitor_left = {
           modifier_keys = [
-            "SUPER"
+            "CTRL"
             "SHIFT"
           ];
           flag_modifiers = [ "s" ];
@@ -226,7 +226,7 @@ in
         };
         move_window_monitor_right = {
           modifier_keys = [
-            "SUPER"
+            "CTRL"
             "SHIFT"
           ];
           flag_modifiers = [ "s" ];
@@ -236,7 +236,7 @@ in
         };
         move_window_monitor_up = {
           modifier_keys = [
-            "SUPER"
+            "CTRL"
             "SHIFT"
           ];
           flag_modifiers = [ "s" ];
@@ -246,13 +246,23 @@ in
         };
         move_window_monitor_down = {
           modifier_keys = [
-            "SUPER"
+            "CTRL"
             "SHIFT"
           ];
           flag_modifiers = [ "s" ];
           key_symbol = "j";
           mangowc_command = "tagmon";
           command_arguments = "down,1";
+        };
+        screenshot = {
+          modifier_keys = [
+            "SUPER"
+            "SHIFT"
+          ];
+          flag_modifiers = [ "s" ];
+          key_symbol = "s";
+          mangowc_command = "spawn_shell";
+          command_arguments = "dms screenshot --no-file";
         };
       };
     };
