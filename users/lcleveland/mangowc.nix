@@ -7,7 +7,9 @@
     edge_scroller_pointer_focus = 0;
 
     tagrule = [
-      "tag:*,layout:scroller"
+      "id:0,monitor_name:eDP-1,layout_name:scroller"
+      "id:0,monitor_name:DP-10,layout_name:scroller"
+      "id:0,monitor_name:DP-11,layout_name:scroller"
     ];
 
     env = [
