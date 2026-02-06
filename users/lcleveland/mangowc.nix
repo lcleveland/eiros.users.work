@@ -7,10 +7,10 @@
     edge_scroller_pointer_focus = 0;
     trackpad_natural_scrolling = 1;
     gesturebind = [
-      "none,left,3,focusdir,left"
-      "none,right,3,focusdir,right"
-      "none,up,3,focusdir,up"
-      "none,down,3,focusdir,down"
+      "none,left,3,focusdir,right"
+      "none,right,3,focusdir,left"
+      "none,up,3,focusdir,down"
+      "none,down,3,focusdir,up"
     ];
 
     tagrule = [
