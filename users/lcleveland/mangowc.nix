@@ -5,6 +5,7 @@
     ov_tab_mode = 1;
     idleinhibit_ignore_visible = 1;
     edge_scroller_pointer_focus = 0;
+    trackpad_natural_scrolling = 1;
 
     tagrule = [
       "id:1,monitor_name:eDP-1,layout_name:scroller"
