@@ -6,6 +6,7 @@
     idleinhibit_ignore_visible = 1;
     edge_scroller_pointer_focus = 0;
     trackpad_natural_scrolling = 1;
+    numlockon = 1;
     gesturebind = [
       "none,left,3,focusdir,right"
       "none,right,3,focusdir,left"
