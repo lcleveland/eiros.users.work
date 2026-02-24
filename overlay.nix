@@ -1,6 +1,6 @@
 { ... }:
 {
   nixpkgs.overlays = [
-    (import ./nix/khal.nix)
+    (import ./resources/nix/khal.nix)
   ];
 }
