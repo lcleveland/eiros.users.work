@@ -8,7 +8,7 @@
     {
       inputs = inputs;
       nixosModules.default = {
-        imports = [ ./overlay.nix ] ++ (import_modules ./users);
+        imports = [ ] ++ (import_modules ./users);
       };
     };
   inputs = {
