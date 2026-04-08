@@ -36,6 +36,7 @@ in
     package = vscodeKeyringWrapped;
 
     extensions = with pkgs.vscode-extensions; [
+      anthropic.claude-code
       jnoortheen.nix-ide
       vscodevim.vim
       github.copilot
