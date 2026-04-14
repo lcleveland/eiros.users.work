@@ -18,11 +18,19 @@
         ms-vscode.cpptools
       ])
       ++ [
-        (pkgs.vscode-extensions.anthropic.claude-code.overrideAttrs (old: {
-          mktplcRef = old.mktplcRef // {
+        (pkgs.vscode-utils.buildVscodeMarketplaceExtension {
+          mktplcRef = {
+            name = "claude-code";
+            publisher = "anthropic";
+            version = "latest";
             hash = "sha256-0djanpdnmy0n02l8id5zpw8z2phpjv8ybdmccr5vzl938kqgvj6k=";
           };
-        }))
+          postInstall = ''
+            mkdir -p "$out/$installPrefix/resources/native-binary"
+            rm -f "$out/$installPrefix/resources/native-binary/claude"*
+            ln -s "${pkgs.claude-code}/bin/claude" "$out/$installPrefix/resources/native-binary/claude"
+          '';
+        })
       ];
   };
 }
