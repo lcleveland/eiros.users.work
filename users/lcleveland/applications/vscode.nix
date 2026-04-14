@@ -23,7 +23,7 @@
             name = "claude-code";
             publisher = "anthropic";
             version = "latest";
-            hash = "sha256-08j98EQj0b9LZqy25dGWF17xEb+/tIioABb4atu1SjY=";
+            hash = "sha256-3RhHJzkY2Lkp5zI8NWXueUfiqd+RuKLfSqcLF4fxvSA=";
           };
           postInstall = ''
             mkdir -p "$out/$installPrefix/resources/native-binary"
