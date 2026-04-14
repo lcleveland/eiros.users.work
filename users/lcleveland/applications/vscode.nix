@@ -18,12 +18,11 @@
         ms-vscode.cpptools
       ])
       ++ [
-        (pkgs.vscode-extensions.anthropic.claude-code.override {
-          src = pkgs.fetchurl {
-            url = "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/anthropic/vsextensions/claude-code/latest/vspackage";
-            sha256 = "0djanpdnmy0n02l8id5zpw8z2phpjv8ybdmccr5vzl938kqgvj6k";
+        (pkgs.vscode-extensions.anthropic.claude-code.overrideAttrs (old: {
+          mktplcRef = old.mktplcRef // {
+            hash = "sha256-0djanpdnmy0n02l8id5zpw8z2phpjv8ybdmccr5vzl938kqgvj6k=";
           };
-        })
+        }))
       ];
   };
 }
