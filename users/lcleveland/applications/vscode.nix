@@ -3,7 +3,7 @@
   config.programs.vscode = {
     enable = true;
     extensions = with pkgs.vscode-extensions; [
-      anthropic.claude-code
+      #anthropic.claude-code
       continue.continue
       jnoortheen.nix-ide
       vscodevim.vim
