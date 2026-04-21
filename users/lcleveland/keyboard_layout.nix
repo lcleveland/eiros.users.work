@@ -1,7 +1,7 @@
 { config, lib, ... }:
 {
   config = {
-    eiros.system.desktop_environment.dank_material_shell.greeter.mango.keyboard_variant = "colemak_dh";
+    eiros.system.desktop_environment.dankmaterialshell.greeter.mango.keyboard_variant = "colemak_dh";
     eiros.system.hardware.keyboard.variant = "colemak_dh";
     eiros.users.lcleveland.mangowc.settings = {
       xkb_rules_layout = "us";
