@@ -9,7 +9,9 @@ let
   # Per HID docs this is a HID Set Feature Report (report id 0x00, bytes
   # 0xA5 0x5A) to the KBW-mode device (076b:5428). It then re-enumerates as
   # the CCID composite device 076b:5A27, which the bundled ccid driver
-  # already supports. hidapi uses hidraw, so no kernel-driver detach is needed.
+  # already supports. hid uses hidraw, so no kernel-driver detach is needed.
+  # NOTE: nixpkgs python3Packages.hid exposes the hid.Device / hid.HIDException
+  # API (not the lowercase hid.device() API of the cython hidapi package).
   omnikey-ccid-switch = pkgs.writers.writePython3Bin "omnikey-ccid-switch"
     {
       libraries = [ pkgs.python3Packages.hid ];
@@ -19,22 +21,23 @@ let
     import hid
 
     try:
-        d = hid.device()
-        d.open(0x076b, 0x5428)  # KBW-mode product id
-    except OSError:
+        d = hid.Device(0x076b, 0x5428)  # KBW-mode product id
+    except hid.HIDException:
         # Not in KBW mode (already CCID, or not present) -> nothing to do.
         sys.exit(0)
 
     try:
-        d.send_feature_report([0x00, 0xA5, 0x5A])  # KBW -> CCID
-    except OSError:
+        d.send_feature_report(bytes([0x00, 0xA5, 0x5A]))  # KBW -> CCID
+    except hid.HIDException:
         # The device re-enumerates as 076b:5A27; an I/O error here is expected.
         pass
   '';
 
   # Read an HID Prox (125 kHz) credential over PC/SC and decode the 26-bit
-  # H10301 Wiegand value into facility code + card number. Verified against a
-  # real card: raw 0x0336a08d -> facility 155, card 20550.
+  # H10301 Wiegand value into facility code + card number. FF CA returns the
+  # raw Wiegand bitstream LEFT-justified, so it must be right-aligned before
+  # decoding. Verified against a real card: FF CA -> CD A8 23 00 -> facility
+  # 155, card 20550 (matches the keyboard-wedge value 0x0336A08D).
   omnikey-read-prox = pkgs.writers.writePython3Bin "omnikey-read-prox"
     {
       libraries = [ pkgs.python3Packages.pyscard ];
@@ -74,12 +77,16 @@ let
         print("GET DATA failed: SW=%02X%02X (raw=%s)" % (sw1, sw2, toHexString(data)), file=sys.stderr)
         sys.exit(1)
 
-    raw = int.from_bytes(bytes(data), "big")
-    print("raw: %s  (0x%X)" % (toHexString(data), raw))
-
-    # 26-bit H10301: 1 parity + 8-bit facility + 16-bit card number + 1 parity.
-    facility = (raw >> 17) & 0xFF
-    card = (raw >> 1) & 0xFFFF
+    b = bytes(data)
+    raw = int.from_bytes(b, "big")
+    # The reader returns the raw Wiegand bitstream left-justified, so right-
+    # align the 26-bit field. 26-bit H10301 layout (after alignment):
+    # 1 leading parity + 8-bit facility + 16-bit card number + 1 trailing parity.
+    wiegand = raw >> (len(b) * 8 - 26)
+    facility = (wiegand >> 17) & 0xFF
+    card = (wiegand >> 1) & 0xFFFF
+    print("raw: %s" % toHexString(data))
+    print("wiegand (26-bit): 0x%07X" % wiegand)
     print("facility code: %d" % facility)
     print("card number: %d" % card)
   '';
