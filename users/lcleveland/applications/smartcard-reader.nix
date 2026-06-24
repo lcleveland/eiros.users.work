@@ -97,6 +97,12 @@ let
     print("facility code  : %sb = 0x%02X = %d" % (facility_bits, facility, facility))
     print("card number    : %sb = 0x%04X = %d" % (card_bits, card, card))
     print("trailing parity: %s" % trail_parity)
+
+    # Some systems fold the facility-code parity into the card number: an odd
+    # facility code adds 65536 (the 17th bit) to the card number.
+    translated = card + (65536 if facility % 2 else 0)
+    note = "  (card + 65536, facility is odd)" if facility % 2 else ""
+    print("translated     : %d%s" % (translated, note))
   '';
 in
 {
