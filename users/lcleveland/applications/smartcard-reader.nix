@@ -83,12 +83,20 @@ let
     # align the 26-bit field. 26-bit H10301 layout (after alignment):
     # 1 leading parity + 8-bit facility + 16-bit card number + 1 trailing parity.
     wiegand = raw >> (len(b) * 8 - 26)
-    facility = (wiegand >> 17) & 0xFF
-    card = (wiegand >> 1) & 0xFFFF
-    print("raw: %s" % toHexString(data))
-    print("wiegand (26-bit): 0x%07X" % wiegand)
-    print("facility code: %d" % facility)
-    print("card number: %d" % card)
+    bits = format(wiegand, "026b")
+    lead_parity, facility_bits, card_bits, trail_parity = (
+        bits[0], bits[1:9], bits[9:25], bits[25],
+    )
+    facility = int(facility_bits, 2)
+    card = int(card_bits, 2)
+
+    print("raw bytes      : %s" % toHexString(data))
+    print("26-bit Wiegand : %s %s %s %s" % (lead_parity, facility_bits, card_bits, trail_parity))
+    print("                 P FFFFFFFF CCCCCCCCCCCCCCCC P   (P=parity F=facility C=card)")
+    print("leading parity : %s" % lead_parity)
+    print("facility code  : %sb = 0x%02X = %d" % (facility_bits, facility, facility))
+    print("card number    : %sb = 0x%04X = %d" % (card_bits, card, card))
+    print("trailing parity: %s" % trail_parity)
   '';
 in
 {
