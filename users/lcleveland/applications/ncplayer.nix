@@ -1,10 +1,10 @@
 { pkgs, ... }:
 let
-  version = "13.35.8340";
+  version = "14.35.8480";
 
   src = pkgs.fetchurl {
     url = "https://resources.ninjarmm.com/development/ninjacontrol/${version}/ninjarmm-ncplayer-${version}_x86_64.rpm";
-    hash = "sha256-QMvP/rGmQwHZiBFMnnz60RrIERWgu7HE4F+eHstnoPw=";
+    hash = "sha256-3AOFu8U47MTHUM9pyio6ruJf5ywBmQadB6fVS+zjf7E=";
   };
 
   # Extract the single self-contained binary from the RPM.
