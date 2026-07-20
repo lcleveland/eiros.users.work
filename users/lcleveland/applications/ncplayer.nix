@@ -14,7 +14,7 @@ let
     nativeBuildInputs = [ pkgs.rpmextract ];
     unpackPhase = "rpmextract ${src}";
     installPhase = ''
-      install -Dm755 opt/ncplayer/bin/ncplayer $out/bin/ncplayer
+      install -Dm755 opt/NinjaRemote/ncplayer/ncplayer $out/bin/ncplayer
     '';
   };
 
